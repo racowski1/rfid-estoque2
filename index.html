@@ -5,24 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Estoque RFID</title>
 <style>
-/* ═══════════════════════════════════════════════════
-   TOKENS & RESET
-═══════════════════════════════════════════════════ */
 :root {
-  --bg:        #0d0f14;
-  --surface:   #151821;
-  --card:      #1c2030;
-  --border:    #2a2f42;
-  --accent:    #3b82f6;
-  --accent2:   #22d3ee;
-  --green:     #22c55e;
-  --yellow:    #fbbf24;
-  --red:       #ef4444;
-  --text:      #f0f4ff;
-  --muted:     #7a82a0;
-  --font-mono: 'Courier New', monospace;
-  --r:         14px;
-  --r-sm:      8px;
+  --bg:      #0d0f14;
+  --surface: #151821;
+  --card:    #1c2030;
+  --border:  #2a2f42;
+  --accent:  #3b82f6;
+  --accent2: #22d3ee;
+  --green:   #22c55e;
+  --yellow:  #fbbf24;
+  --red:     #ef4444;
+  --text:    #f0f4ff;
+  --muted:   #7a82a0;
+  --mono:    'Courier New', monospace;
+  --r:       14px;
+  --rsm:     8px;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; overflow: hidden; }
@@ -30,179 +27,90 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 input, select { font-family: inherit; font-size: 14px; }
 select option { background: var(--card); }
 
-/* ═══════════════════════════════════════════════════
-   SHELL
-═══════════════════════════════════════════════════ */
 #app { display: flex; flex-direction: column; height: 100vh; }
 
-/* ── Status bar ── */
-#statusBar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 14px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  font-size: 11px; color: var(--muted);
-  flex-shrink: 0;
-}
-#statusBar .device-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--green);
-  animation: blink 2s infinite; margin-right: 5px; display: inline-block;
-}
+#statusBar { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; margin-right: 5px; display: inline-block; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* ── Tab bar ── */
-#tabBar {
-  display: flex; flex-shrink: 0;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-}
-.tab-btn {
-  flex: 1; padding: 11px 4px;
-  background: none; color: var(--muted);
-  font-size: 11px; font-weight: 600; letter-spacing: .04em;
-  text-transform: uppercase;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  border-bottom: 2px solid transparent;
-  transition: color .2s, border-color .2s;
-}
+#tabBar { display: flex; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); }
+.tab-btn { flex: 1; padding: 11px 4px; background: none; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 3px; border-bottom: 2px solid transparent; transition: color .2s, border-color .2s; }
 .tab-btn .ico { font-size: 18px; }
 .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); }
 
-/* ── Content area ── */
 #content { flex: 1; overflow-y: auto; padding: 14px; }
-
-/* ── Screens ── */
 .screen { display: none; }
 .screen.active { display: block; }
 
-/* ═══════════════════════════════════════════════════
-   COMPONENTS
-═══════════════════════════════════════════════════ */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 14px;
-  margin-bottom: 12px;
-}
-.card-title {
-  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 10px;
-}
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 12px; }
+.card-title { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.card-warn { border-color: rgba(251,191,36,.4); }
+.card-warn .card-title { color: var(--yellow); }
 
-.row { display: flex; gap: 8px; margin-bottom: 10px; }
-.row > * { flex: 1; }
+select.field { width: 100%; padding: 9px 12px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--rsm); }
+select.field:focus { border-color: var(--accent); outline: none; }
 
-select.field, input.field {
-  width: 100%; padding: 9px 12px;
-  background: var(--surface); color: var(--text);
-  border: 1px solid var(--border); border-radius: var(--r-sm);
-}
-select.field:focus, input.field:focus { border-color: var(--accent); outline: none; }
-
-/* Chips */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip {
-  padding: 5px 13px; border-radius: 20px; font-size: 13px; font-weight: 500;
-  border: 1px solid var(--border); background: var(--surface); color: var(--muted);
-  transition: all .15s;
-}
+.chip { padding: 5px 13px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); color: var(--muted); transition: all .15s; cursor: pointer; }
 .chip.on { border-color: var(--accent2); background: rgba(34,211,238,.12); color: var(--accent2); }
 
-/* Stats */
 .stats { display: flex; gap: 8px; margin-bottom: 12px; }
-.stat {
-  flex: 1; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r-sm); padding: 10px; text-align: center;
-}
+.stat { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--rsm); padding: 10px; text-align: center; }
 .stat-n { font-size: 26px; font-weight: 700; line-height: 1; color: var(--accent2); }
 .stat-l { font-size: 10px; color: var(--muted); margin-top: 3px; }
 
-/* Buttons */
-.btn {
-  display: block; width: 100%; padding: 14px;
-  border-radius: var(--r); font-size: 15px; font-weight: 600;
-  letter-spacing: .02em; transition: opacity .15s, transform .1s;
-}
+.btn { display: block; width: 100%; padding: 14px; border-radius: var(--r); font-size: 15px; font-weight: 600; letter-spacing: .02em; transition: opacity .15s, transform .1s; }
 .btn:active { transform: scale(.98); opacity: .85; }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-danger  { background: var(--red);   color: #fff; }
 .btn-success { background: var(--green); color: #fff; }
 .btn-muted   { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+.btn-sm      { padding: 8px 14px; font-size: 13px; border-radius: var(--rsm); }
 .btn:disabled { opacity: .35; pointer-events: none; }
 .btn + .btn  { margin-top: 8px; }
 
-/* Tag list */
-#tagList { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
-.tag-item {
-  display: flex; align-items: center; justify-content: space-between;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r-sm); padding: 10px 12px;
-}
-.tag-item .epc { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
-.tag-item .info { font-size: 13px; font-weight: 600; }
-.tag-item .rssi { font-size: 12px; font-weight: 700; }
+#tagList { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+.tag-item { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--rsm); padding: 10px 12px; }
+.tag-item.unknown { border-color: rgba(251,191,36,.35); }
+.tag-item .epc    { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.tag-item .info   { font-size: 13px; font-weight: 600; }
+.tag-item .rssi   { font-size: 12px; font-weight: 700; }
 
-/* Proximity meter */
-#proxWrap {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 20px 0; gap: 10px;
-}
+#offlineBanner { display: none; background: rgba(239,68,68,.1); border: 1px solid var(--red); border-radius: var(--rsm); padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: var(--red); text-align: center; }
+#offlineBanner.show { display: block; }
+#cardPendentes { display: none; }
+#cardPendentes.show { display: block; }
+
+#proxWrap { display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 10px; }
 #proxArcWrap { position: relative; width: 140px; height: 140px; }
 #proxSvg { width: 140px; height: 140px; }
-#proxCenter {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
+#proxCenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 #proxEmoji { font-size: 32px; line-height: 1; }
 #proxDbm   { font-size: 11px; color: var(--muted); margin-top: 2px; }
 #proxLabel { font-size: 22px; font-weight: 700; }
 #proxHint  { font-size: 13px; color: var(--muted); text-align: center; padding: 0 20px; }
 
-/* Found badge */
-#foundCard {
-  display: none;
-  background: rgba(34,197,94,.1); border: 1px solid var(--green);
-  border-radius: var(--r); padding: 14px; margin-bottom: 12px;
-  align-items: center; gap: 12px;
-}
+#foundCard { display: none; background: rgba(34,197,94,.1); border: 1px solid var(--green); border-radius: var(--r); padding: 14px; margin-bottom: 12px; align-items: center; gap: 12px; }
 #foundCard.show { display: flex; }
-#foundCard .found-icon { font-size: 32px; }
-#foundCard .found-info { font-size: 13px; font-weight: 600; color: var(--green); }
-#foundCard .found-epc  { font-size: 10px; font-family: var(--font-mono); color: #6ee7b7; }
+.found-icon { font-size: 32px; }
+.found-info { font-size: 13px; font-weight: 600; color: var(--green); }
+.found-epc  { font-size: 10px; font-family: var(--mono); color: #6ee7b7; }
 
-/* Settings rows */
-.cfg-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 11px 0; border-bottom: 1px solid var(--border); gap: 10px;
-}
+.cfg-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); gap: 10px; }
 .cfg-row:last-child { border-bottom: none; }
 .cfg-row label { font-size: 13px; color: var(--muted); white-space: nowrap; }
 .cfg-row .val  { font-size: 13px; font-weight: 600; text-align: right; }
-.cfg-pill {
-  font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600;
-}
-.pill-on  { background: rgba(34,197,94,.15); color: var(--green); }
-.pill-off { background: rgba(239,68,68,.12); color: var(--red); }
+.cfg-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+.pill-on   { background: rgba(34,197,94,.15);  color: var(--green); }
+.pill-off  { background: rgba(239,68,68,.12);  color: var(--red); }
+.pill-warn { background: rgba(251,191,36,.15); color: var(--yellow); }
 
-/* Toast */
-#toast {
-  position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(12px);
-  background: #1e2236; border: 1px solid var(--border);
-  padding: 9px 18px; border-radius: 30px;
-  font-size: 13px; font-weight: 500; white-space: nowrap;
-  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
-  z-index: 999;
-}
+#toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(12px); background: #1e2236; border: 1px solid var(--border); padding: 9px 18px; border-radius: 30px; font-size: 13px; font-weight: 500; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 999; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 #toast.ok  { border-color: var(--green); color: var(--green); }
 #toast.err { border-color: var(--red);   color: var(--red); }
 
-/* Scan line animation */
-.scan-line {
-  height: 2px; background: linear-gradient(90deg, transparent, var(--accent2), transparent);
-  margin: 8px 0; opacity: 0; border-radius: 2px;
-}
+.scan-line { height: 2px; background: linear-gradient(90deg, transparent, var(--accent2), transparent); margin: 8px 0; opacity: 0; border-radius: 2px; }
 .scan-line.active { animation: scan 1.2s linear infinite; }
 @keyframes scan { 0%{opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
 </style>
@@ -210,104 +118,123 @@ select.field:focus, input.field:focus { border-color: var(--accent); outline: no
 <body>
 <div id="app">
 
-  <!-- Status bar -->
   <div id="statusBar">
-    <span><span class="device-dot"></span>C72 · UHF</span>
-    <span id="sbMode">Modo: <b id="sbModeVal">—</b></span>
-    <span id="sbDb">DB: <b id="sbDbVal">—</b></span>
+    <span><span class="dot"></span>C72 · UHF</span>
+    <span>RFID: <b id="sbRfid">—</b></span>
+    <span>DB: <b id="sbDb">—</b></span>
   </div>
 
-  <!-- Tab bar -->
   <div id="tabBar">
-    <button class="tab-btn active" id="tab0" onclick="goTab(0)">
-      <span class="ico">📦</span>Inventário
-    </button>
-    <button class="tab-btn" id="tab1" onclick="goTab(1)">
-      <span class="ico">🔍</span>Localizar
-    </button>
-    <button class="tab-btn" id="tab2" onclick="goTab(2)">
-      <span class="ico">⚙️</span>Config
-    </button>
+    <button class="tab-btn active" id="tab0" onclick="goTab(0)"><span class="ico">📦</span>Inventário</button>
+    <button class="tab-btn"        id="tab1" onclick="goTab(1)"><span class="ico">🔍</span>Localizar</button>
+    <button class="tab-btn"        id="tab2" onclick="goTab(2)"><span class="ico">⚙️</span>Config</button>
   </div>
 
-  <!-- Content -->
   <div id="content">
 
-    <!-- ══════════════════════════════════════════
-         TELA 0 — INVENTÁRIO
-    ══════════════════════════════════════════ -->
+    <!-- ══ INVENTÁRIO ══ -->
     <div class="screen active" id="screenInventario">
 
+      <div id="offlineBanner">⚠ Sem internet — inventário será salvo localmente</div>
+
       <div class="card">
-        <div class="card-title">Filtros</div>
-        <div class="row">
-          <select class="field" id="selSala">
-            <option value="">Sala...</option>
-            <option>Sala A</option><option>Sala B</option><option>Sala C</option>
-          </select>
-          <select class="field" id="selCor">
-            <option value="">Cor...</option>
-            <option>Azul</option><option>Vermelho</option>
-            <option>Verde</option><option>Preto</option><option>Branco</option>
-          </select>
-        </div>
-        <select class="field" id="selTecido" style="width:100%">
-          <option value="">Tecido...</option>
-          <option>Linho</option><option>Algodão</option>
-          <option>Seda</option><option>Poliéster</option><option>Viscose</option>
+        <div class="card-title">Sala desta leitura</div>
+        <select class="field" id="selSala">
+          <option value="">Selecione a sala...</option>
+          <option>Sala A</option><option>Sala B</option><option>Sala C</option>
         </select>
       </div>
 
       <div class="stats">
-        <div class="stat"><div class="stat-n" id="cntTotal">0</div><div class="stat-l">Lidas</div></div>
-        <div class="stat"><div class="stat-n" id="cntFiltro">0</div><div class="stat-l">Filtro</div></div>
-        <div class="stat"><div class="stat-n" id="cntNovos">0</div><div class="stat-l">Novas</div></div>
+        <div class="stat">
+          <div class="stat-n" id="cntTotal">0</div>
+          <div class="stat-l">Total lidas</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n" id="cntCadastradas" style="color:var(--green)">0</div>
+          <div class="stat-l">Cadastradas</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n" id="cntDesconhecidas" style="color:var(--yellow)">0</div>
+          <div class="stat-l">Não cadastradas</div>
+        </div>
+      </div>
+
+      <!-- Tags sem cadastro -->
+      <div class="card card-warn" id="cardDesconhecidas" style="display:none">
+        <div class="card-title">⚠ Tags sem cadastro — anote o EPC e registre no Supabase</div>
+        <div id="listaDesconhecidas" style="display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+
+      <!-- Pendentes offline -->
+      <div class="card card-warn" id="cardPendentes">
+        <div class="card-title">📦 Inventários salvos offline</div>
+        <div id="txtPendentes" style="font-size:12px;color:var(--muted);margin-bottom:8px"></div>
+        <button class="btn btn-muted btn-sm" onclick="sincronizarPendentes()">Sincronizar agora →</button>
       </div>
 
       <div class="scan-line" id="scanLine"></div>
-
-      <button class="btn btn-primary" id="btnScan" onclick="toggleScan()">▶ Iniciar leitura UHF</button>
+      <button class="btn btn-primary" id="btnScan"   onclick="toggleScan()">▶ Iniciar leitura UHF</button>
       <button class="btn btn-success" id="btnEnviar" onclick="enviarInventario()" disabled>Enviar inventário →</button>
-
       <div style="height:10px"></div>
       <div id="tagList"></div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TELA 1 — LOCALIZAÇÃO
-    ══════════════════════════════════════════ -->
+    <!-- ══ LOCALIZAÇÃO ══ -->
     <div class="screen" id="screenLocalizacao">
-
       <div class="card">
-        <div class="card-title">Selecione o que procurar</div>
-        <div style="margin-bottom:8px;font-size:12px;color:var(--muted)">Cor</div>
-        <div class="chips" id="chipsCor" style="margin-bottom:12px">
-          <div class="chip" onclick="toggleChip(this,'cor','Azul')">Azul</div>
-          <div class="chip" onclick="toggleChip(this,'cor','Vermelho')">Vermelho</div>
-          <div class="chip" onclick="toggleChip(this,'cor','Verde')">Verde</div>
-          <div class="chip" onclick="toggleChip(this,'cor','Preto')">Preto</div>
-          <div class="chip" onclick="toggleChip(this,'cor','Branco')">Branco</div>
+
+        <!-- Toggle de modo -->
+        <div style="display:flex;gap:6px;margin-bottom:14px">
+          <button id="btnModoTexto" onclick="setModoLoc('texto')"
+            style="flex:1;padding:8px;border-radius:var(--rsm);font-size:12px;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer">
+            🔤 Texto livre
+          </button>
+          <button id="btnModoChips" onclick="setModoLoc('chips')"
+            style="flex:1;padding:8px;border-radius:var(--rsm);font-size:12px;font-weight:600;background:var(--surface);color:var(--muted);border:1px solid var(--border);cursor:pointer">
+            🏷️ Cor / Tecido
+          </button>
         </div>
-        <div style="margin-bottom:8px;font-size:12px;color:var(--muted)">Tecido</div>
-        <div class="chips" id="chipsTecido">
-          <div class="chip" onclick="toggleChip(this,'tecido','Linho')">Linho</div>
-          <div class="chip" onclick="toggleChip(this,'tecido','Algodão')">Algodão</div>
-          <div class="chip" onclick="toggleChip(this,'tecido','Seda')">Seda</div>
-          <div class="chip" onclick="toggleChip(this,'tecido','Poliéster')">Poliéster</div>
+
+        <!-- MODO TEXTO LIVRE -->
+        <div id="modoTexto">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Buscar em cor, tecido ou descrição</div>
+          <input id="inputBusca" type="text" placeholder="Ex: linho, azul, rolo 03..."
+            oninput="onBuscaInput()"
+            style="width:100%;padding:10px 12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--rsm);font-size:14px;font-family:inherit"/>
+          <div id="resultadosBusca" style="margin-top:8px;display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto"></div>
         </div>
+
+        <!-- MODO CHIPS COR/TECIDO -->
+        <div id="modoChips" style="display:none">
+          <div style="margin-bottom:8px;font-size:12px;color:var(--muted)">Cor</div>
+          <div class="chips" style="margin-bottom:12px">
+            <div class="chip" onclick="toggleChip(this,'cor','Azul')">Azul</div>
+            <div class="chip" onclick="toggleChip(this,'cor','Vermelho')">Vermelho</div>
+            <div class="chip" onclick="toggleChip(this,'cor','Verde')">Verde</div>
+            <div class="chip" onclick="toggleChip(this,'cor','Preto')">Preto</div>
+            <div class="chip" onclick="toggleChip(this,'cor','Branco')">Branco</div>
+          </div>
+          <div style="margin-bottom:8px;font-size:12px;color:var(--muted)">Tecido</div>
+          <div class="chips">
+            <div class="chip" onclick="toggleChip(this,'tecido','Linho')">Linho</div>
+            <div class="chip" onclick="toggleChip(this,'tecido','Algodão')">Algodão</div>
+            <div class="chip" onclick="toggleChip(this,'tecido','Seda')">Seda</div>
+            <div class="chip" onclick="toggleChip(this,'tecido','Poliéster')">Poliéster</div>
+            <div class="chip" onclick="toggleChip(this,'tecido','Viscose')">Viscose</div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Medidor quente/frio -->
       <div class="card">
         <div id="proxWrap">
           <div id="proxArcWrap">
             <svg id="proxSvg" viewBox="0 0 140 140">
               <circle cx="70" cy="70" r="58" fill="none" stroke="#2a2f42" stroke-width="10"/>
-              <circle id="proxArc" cx="70" cy="70" r="58" fill="none"
-                stroke="#3b82f6" stroke-width="10"
-                stroke-dasharray="0 365" stroke-linecap="round"
-                transform="rotate(-90 70 70)"
-                style="transition: stroke-dasharray .4s ease, stroke .4s ease"/>
+              <circle id="proxArc" cx="70" cy="70" r="58" fill="none" stroke="#3b82f6" stroke-width="10"
+                stroke-dasharray="0 365" stroke-linecap="round" transform="rotate(-90 70 70)"
+                style="transition:stroke-dasharray .4s ease,stroke .4s ease"/>
             </svg>
             <div id="proxCenter">
               <div id="proxEmoji">—</div>
@@ -315,11 +242,10 @@ select.field:focus, input.field:focus { border-color: var(--accent); outline: no
             </div>
           </div>
           <div id="proxLabel" style="color:var(--muted)">Aguardando</div>
-          <div id="proxHint">Selecione cor e/ou tecido e pressione o gatilho do C72</div>
+          <div id="proxHint">Use o filtro acima e pressione Buscar peça</div>
         </div>
       </div>
 
-      <!-- Card encontrado -->
       <div id="foundCard">
         <div class="found-icon">✅</div>
         <div>
@@ -331,208 +257,124 @@ select.field:focus, input.field:focus { border-color: var(--accent); outline: no
       <button class="btn btn-primary" id="btnLoc" onclick="toggleLoc()">🔍 Buscar peça</button>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TELA 2 — CONFIGURAÇÕES
-    ══════════════════════════════════════════ -->
+    <!-- ══ CONFIG ══ -->
     <div class="screen" id="screenConfig">
-
       <div class="card">
         <div class="card-title">Banco de dados</div>
-        <div class="cfg-row">
-          <label>Modo ativo</label>
-          <span class="cfg-pill" id="cfgDbMode">—</span>
-        </div>
-        <div class="cfg-row">
-          <label>Supabase URL</label>
-          <span class="val" id="cfgUrl" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis">—</span>
-        </div>
-        <div class="cfg-row">
-          <label>Tabela tags</label>
-          <span class="val" id="cfgTable">—</span>
-        </div>
+        <div class="cfg-row"><label>Modo</label><span class="cfg-pill" id="cfgDbMode">—</span></div>
+        <div class="cfg-row"><label>URL</label><span class="val" id="cfgUrl" style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span></div>
+        <div class="cfg-row"><label>Tabela</label><span class="val" id="cfgTable">—</span></div>
+        <div class="cfg-row"><label>Tags no cadastro</label><span class="val" id="cfgTagCount">—</span></div>
       </div>
-
       <div class="card">
         <div class="card-title">Leitor RFID</div>
-        <div class="cfg-row">
-          <label>Modo leitura</label>
-          <span class="cfg-pill" id="cfgRfidMode">—</span>
-        </div>
-        <div class="cfg-row">
-          <label>Potência TX</label>
-          <span class="val" id="cfgPower">—</span>
-        </div>
-        <div class="cfg-row">
-          <label>Protocolo</label>
-          <span class="val">EPC C1 GEN2</span>
-        </div>
+        <div class="cfg-row"><label>Modo</label><span class="cfg-pill" id="cfgRfidMode">—</span></div>
+        <div class="cfg-row"><label>Potência TX</label><span class="val" id="cfgPower">—</span></div>
+        <div class="cfg-row"><label>Protocolo</label><span class="val">EPC C1 GEN2 (UHF)</span></div>
       </div>
-
       <div class="card">
         <div class="card-title">Limiar RSSI</div>
-        <div class="cfg-row">
-          <label>🔥 Muito perto (≥)</label>
-          <span class="val" id="cfgHot">—</span>
-        </div>
-        <div class="cfg-row">
-          <label>🌡️ Perto (≥)</label>
-          <span class="val" id="cfgWarm">—</span>
-        </div>
-        <div class="cfg-row">
-          <label>❄️ Longe (&lt;)</label>
-          <span class="val" id="cfgCold">—</span>
-        </div>
+        <div class="cfg-row"><label>🔥 Muito perto (≥)</label><span class="val" id="cfgHot">—</span></div>
+        <div class="cfg-row"><label>🌡️ Perto (≥)</label><span class="val" id="cfgWarm">—</span></div>
+        <div class="cfg-row"><label>❄️ Longe (&lt;)</label><span class="val" id="cfgCold">—</span></div>
       </div>
-
-      <button class="btn btn-muted" onclick="testarConexao()">Testar conexão com banco</button>
-      <button class="btn btn-muted" style="margin-top:8px" onclick="carregarTagsManual()">Recarregar cadastro de tags</button>
-
+      <div class="card">
+        <div class="card-title">Offline</div>
+        <div class="cfg-row"><label>Inventários pendentes</label><span class="val" id="cfgPendentes">0</span></div>
+      </div>
+      <button class="btn btn-muted" onclick="testarConexao()">Testar conexão com Supabase</button>
+      <button class="btn btn-muted" onclick="carregarTagsManual()">Recarregar cadastro de tags</button>
     </div>
-  </div><!-- /content -->
-</div><!-- /app -->
 
+  </div>
+</div>
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════════════
-   CONFIG — altere aqui. Quando a TI fornecer a API real,
-   mude DB_MODE para 'api' e preencha API_BASE_URL + API_TAGS_ENDPOINT.
-═══════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   CONFIG — edite só este bloco
+═══════════════════════════════════════════════ */
 const CFG = {
+  DB_MODE: 'supabase',      // 'supabase' | 'api' | 'mock'
 
-  // ── Modo do banco: 'supabase' | 'api' | 'mock' ──────────────────────
-  DB_MODE: 'supabase',      // 'mock' = sem banco (dados locais para teste)
-                             // 'supabase' = Supabase direto
-                             // 'api' = API REST da TI
-
-  // ── Supabase ─────────────────────────────────────────────────────────
   SUPABASE_URL:      'https://yveryjepokezowlkjosx.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2ZXJ5amVwb2tlem93bGtqb3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxOTY4OTAsImV4cCI6MjA5MTc3Mjg5MH0.RKvvS8z4Fi27XNl_f023pH4erXYbKYXeFMEZfTf84Uw',
-  SUPABASE_TABLE:    'tags',   // nome da tabela no Supabase
+  SUPABASE_TABLE:    'tags',
 
-  // ── API REST própria (TI) ─────────────────────────────────────────────
-  API_BASE_URL:       'https://sistema.suaempresa.com.br/api',
-  API_TAGS_ENDPOINT:  '/rfid/tags',       // GET → lista de tags cadastradas
-  API_INV_ENDPOINT:   '/rfid/inventario', // POST → envia sessão de inventário
-  API_TOKEN:          '',                 // Bearer token, se necessário
+  API_BASE_URL:      'https://sistema.suaempresa.com.br/api',
+  API_TAGS_ENDPOINT: '/rfid/tags',
+  API_INV_ENDPOINT:  '/rfid/inventario',
+  API_TOKEN:         '',
 
-  // ── Mapeamento de colunas/campos ─────────────────────────────────────
-  // Ajuste os nomes das propriedades para bater com os campos da sua API.
-  // Estes são os campos que o app vai ler de cada objeto retornado pela API.
-  FIELD_EPC:      'epc',
-  FIELD_COR:      'cor',
-  FIELD_TECIDO:   'tecido',
-  FIELD_SALA:     'sala',
-  FIELD_DESC:     'descricao',
+  FIELD_EPC:    'epc',
+  FIELD_COR:    'cor',
+  FIELD_TECIDO: 'tecido',
+  FIELD_SALA:   'sala',
+  FIELD_DESC:   'descricao',
 
-  // ── Leitor RFID ───────────────────────────────────────────────────────
-  RFID_MODE:  'real',   // 'real' = SDK Chainway via Android bridge
-                         // 'mock' = simula leituras (teste no PC/emulador)
-  UHF_POWER:  27,        // dBm
+  RFID_MODE:  'real',       // 'real' = C72 físico | 'mock' = só para teste no PC
+  UHF_POWER:  27,
 
-  // ── Limiar RSSI para proximidade ─────────────────────────────────────
-  RSSI_HOT:   -50,
-  RSSI_WARM:  -65,
-  RSSI_COLD:  -85,
+  RSSI_HOT:  -50,
+  RSSI_WARM: -65,
+  RSSI_COLD: -85,
 };
 
-/* ═══════════════════════════════════════════════════════════════════════
-   CAMADA DE DADOS — DataSource
-   Toda comunicação com o banco passa por aqui.
-   Para trocar de Supabase para a API da TI: mude CFG.DB_MODE.
-═══════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   DATASOURCE
+═══════════════════════════════════════════════ */
 const DataSource = {
-
-  // Retorna lista de tags cadastradas (Array de objetos normalizados)
   async fetchTags() {
     if (CFG.DB_MODE === 'mock')      return DataSource._mockTags();
     if (CFG.DB_MODE === 'supabase') return DataSource._supabaseFetchTags();
     if (CFG.DB_MODE === 'api')      return DataSource._apiFetchTags();
-    throw new Error('DB_MODE inválido: ' + CFG.DB_MODE);
   },
-
-  // Envia sessão de inventário
-  async pushInventario(sessao) {
-    if (CFG.DB_MODE === 'mock')      { console.log('[MOCK] inventário:', sessao); return { ok: true }; }
-    if (CFG.DB_MODE === 'supabase') return DataSource._supabasePushInventario(sessao);
-    if (CFG.DB_MODE === 'api')      return DataSource._apiPushInventario(sessao);
+  async pushInventario(s) {
+    if (CFG.DB_MODE === 'mock')      return { ok: true };
+    if (CFG.DB_MODE === 'supabase') return DataSource._supabasePush(s);
+    if (CFG.DB_MODE === 'api')      return DataSource._apiPush(s);
   },
-
-  // Testa conectividade
   async testar() {
-    if (CFG.DB_MODE === 'mock') return { ok: false, msg: 'Modo mock — banco NÃO conectado' };
+    if (CFG.DB_MODE === 'mock') return { ok: false, msg: 'Modo MOCK — banco não conectado' };
     try {
       const tags = await DataSource.fetchTags();
       return { ok: true, msg: `Supabase OK ✓ — ${tags.length} tag(s) no cadastro` };
-    } catch(e) {
-      return { ok: false, msg: 'Erro: ' + e.message };
-    }
+    } catch(e) { return { ok: false, msg: 'Erro: ' + e.message }; }
   },
-
-  // ── Normaliza objeto retornado pela API para o formato interno ────────
-  _normalize(raw) {
-    return {
-      epc:      raw[CFG.FIELD_EPC]    || '',
-      cor:      raw[CFG.FIELD_COR]    || '',
-      tecido:   raw[CFG.FIELD_TECIDO] || '',
-      sala:     raw[CFG.FIELD_SALA]   || '',
-      descricao: raw[CFG.FIELD_DESC]  || '',
-    };
+  _norm(r) {
+    return { epc: r[CFG.FIELD_EPC]||'', cor: r[CFG.FIELD_COR]||'', tecido: r[CFG.FIELD_TECIDO]||'', sala: r[CFG.FIELD_SALA]||'', descricao: r[CFG.FIELD_DESC]||'' };
   },
-
-  // ── Supabase ──────────────────────────────────────────────────────────
   async _supabaseFetchTags() {
-    const res = await fetch(
-      `${CFG.SUPABASE_URL}/rest/v1/${CFG.SUPABASE_TABLE}?select=*`,
-      { headers: {
-          'apikey': CFG.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${CFG.SUPABASE_ANON_KEY}`
-      }}
-    );
-    if (!res.ok) throw new Error('Supabase erro ' + res.status);
-    return (await res.json()).map(DataSource._normalize);
-  },
-
-  async _supabasePushInventario(sessao) {
-    const res = await fetch(
-      `${CFG.SUPABASE_URL}/rest/v1/inventario_sessoes`,
-      { method: 'POST',
-        headers: {
-          'apikey': CFG.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${CFG.SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(sessao)
-      }
-    );
-    if (!res.ok) throw new Error('Supabase push erro ' + res.status);
-    return { ok: true };
-  },
-
-  // ── API REST própria ─────────────────────────────────────────────────
-  async _apiFetchTags() {
-    const headers = { 'Content-Type': 'application/json' };
-    if (CFG.API_TOKEN) headers['Authorization'] = `Bearer ${CFG.API_TOKEN}`;
-    const res = await fetch(CFG.API_BASE_URL + CFG.API_TAGS_ENDPOINT, { headers });
-    if (!res.ok) throw new Error('API erro ' + res.status);
-    const data = await res.json();
-    // A API pode retornar { data: [...] } ou direto um array — trata os dois
-    const arr = Array.isArray(data) ? data : (data.data || data.items || data.results || []);
-    return arr.map(DataSource._normalize);
-  },
-
-  async _apiPushInventario(sessao) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (CFG.API_TOKEN) headers['Authorization'] = `Bearer ${CFG.API_TOKEN}`;
-    const res = await fetch(CFG.API_BASE_URL + CFG.API_INV_ENDPOINT, {
-      method: 'POST', headers, body: JSON.stringify(sessao)
+    const res = await fetch(`${CFG.SUPABASE_URL}/rest/v1/${CFG.SUPABASE_TABLE}?select=*`, {
+      headers: { 'apikey': CFG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CFG.SUPABASE_ANON_KEY}` }
     });
-    if (!res.ok) throw new Error('API push erro ' + res.status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return (await res.json()).map(DataSource._norm);
+  },
+  async _supabasePush(s) {
+    const res = await fetch(`${CFG.SUPABASE_URL}/rest/v1/inventario_sessoes`, {
+      method: 'POST',
+      headers: { 'apikey': CFG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CFG.SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(s)
+    });
+    if (!res.ok) throw new Error('Push HTTP ' + res.status);
     return { ok: true };
   },
-
-  // ── Dados mock (sem banco) ────────────────────────────────────────────
+  async _apiFetchTags() {
+    const h = { 'Content-Type': 'application/json' };
+    if (CFG.API_TOKEN) h['Authorization'] = `Bearer ${CFG.API_TOKEN}`;
+    const res = await fetch(CFG.API_BASE_URL + CFG.API_TAGS_ENDPOINT, { headers: h });
+    if (!res.ok) throw new Error('API HTTP ' + res.status);
+    const d = await res.json();
+    return (Array.isArray(d) ? d : (d.data||d.items||d.results||[])).map(DataSource._norm);
+  },
+  async _apiPush(s) {
+    const h = { 'Content-Type': 'application/json' };
+    if (CFG.API_TOKEN) h['Authorization'] = `Bearer ${CFG.API_TOKEN}`;
+    const res = await fetch(CFG.API_BASE_URL + CFG.API_INV_ENDPOINT, { method:'POST', headers:h, body:JSON.stringify(s) });
+    if (!res.ok) throw new Error('API push HTTP ' + res.status);
+    return { ok: true };
+  },
   _mockTags() {
     return [
       { epc:'E280116060000204A7C14B5A', cor:'Azul',     tecido:'Linho',     sala:'Sala A', descricao:'Rolo 01' },
@@ -540,246 +382,297 @@ const DataSource = {
       { epc:'E280116060000204A7C14B5C', cor:'Vermelho', tecido:'Linho',     sala:'Sala B', descricao:'Rolo 03' },
       { epc:'E280116060000204A7C14B5D', cor:'Verde',    tecido:'Seda',      sala:'Sala B', descricao:'Rolo 04' },
       { epc:'E280116060000204A7C14B5E', cor:'Preto',    tecido:'Poliéster', sala:'Sala C', descricao:'Rolo 05' },
-      { epc:'E280116060000204A7C14B5F', cor:'Azul',     tecido:'Seda',      sala:'Sala C', descricao:'Rolo 06' },
-      { epc:'E280116060000204A7C14B60', cor:'Vermelho', tecido:'Algodão',   sala:'Sala A', descricao:'Rolo 07' },
-      { epc:'E280116060000204A7C14B61', cor:'Verde',    tecido:'Linho',     sala:'Sala B', descricao:'Rolo 08' },
     ];
   }
 };
 
-/* ═══════════════════════════════════════════════════════════════════════
-   CAMADA RFID — RfidReader
-   'real' → chama Android.lerTags() (WebView bridge do APK)
-   'mock' → simula leituras via setInterval
-═══════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   RFID READER
+═══════════════════════════════════════════════ */
 const RfidReader = {
-  _cb: null,
-  _interval: null,
-  _step: 0,
-
-  // Inicia leitura contínua. callback(epc, rssi) chamado a cada tag.
-  start(callback) {
-    RfidReader._cb = callback;
-    RfidReader._step = 0;
+  _cb: null, _iv: null, _step: 0,
+  start(cb) {
+    this._cb = cb; this._step = 0;
     if (CFG.RFID_MODE === 'real') {
-      // O APK Android chama window.onTagRead(epc, rssi) via evaluateJavascript
-      window.onTagRead = (epc, rssi) => {
-        if (RfidReader._cb) RfidReader._cb(epc, parseInt(rssi));
-      };
-      // Dispara a leitura no SDK Chainway pelo bridge nativo
-      if (window.Android && window.Android.startInventory) {
-        window.Android.startInventory(CFG.UHF_POWER);
-      }
+      window.onTagRead = (epc, rssi) => { if (this._cb) this._cb(epc, parseInt(rssi)); };
+      if (window.Android?.startInventory) window.Android.startInventory(CFG.UHF_POWER);
     } else {
-      // Mock: simula tags em loop
       const tags = DataSource._mockTags();
-      RfidReader._interval = setInterval(() => {
-        const t = tags[RfidReader._step % tags.length];
-        // RSSI vai crescendo para simular aproximação
-        const rssi = Math.min(-90 + RfidReader._step * 3, -42) + (Math.random()*6 - 3) | 0;
-        RfidReader._cb(t.epc, rssi);
-        RfidReader._step++;
+      this._iv = setInterval(() => {
+        const t = tags[this._step % tags.length];
+        const r = Math.min(-90 + this._step*3, -42) + ((Math.random()*6-3)|0);
+        this._cb(t.epc, r); this._step++;
       }, 700);
     }
   },
-
   stop() {
-    RfidReader._cb = null;
+    this._cb = null;
     if (CFG.RFID_MODE === 'real') {
-      if (window.Android && window.Android.stopInventory) {
-        window.Android.stopInventory();
-      }
       window.onTagRead = null;
-    } else {
-      clearInterval(RfidReader._interval);
-    }
+      if (window.Android?.stopInventory) window.Android.stopInventory();
+    } else { clearInterval(this._iv); }
   }
 };
 
-/* ═══════════════════════════════════════════════════════════════════════
-   ESTADO GLOBAL
-═══════════════════════════════════════════════════════════════════════ */
-let tagDb      = [];   // cadastro carregado do banco
-let tagMap     = {};   // { epc: {epc,cor,tecido,rssi,count} } — sessão atual
-let scanning   = false;
-let locating   = false;
-let filtro     = { cor: '', tecido: '' };
-let sessaoId   = '';
+/* ═══════════════════════════════════════════════
+   OFFLINE QUEUE
+═══════════════════════════════════════════════ */
+const Q = {
+  KEY: 'rfid_q',
+  get()    { try { return JSON.parse(localStorage.getItem(this.KEY)||'[]'); } catch { return []; } },
+  add(s)   { const q=this.get(); q.push(s); localStorage.setItem(this.KEY,JSON.stringify(q)); },
+  clear()  { localStorage.removeItem(this.KEY); },
+  count()  { return this.get().length; },
+  async sync() {
+    const q = this.get();
+    if (!q.length) { toast('Nenhum pendente',''); return; }
+    let ok=0, err=0;
+    for (const s of q) { try { await DataSource.pushInventario(s); ok++; } catch { err++; } }
+    if (!err) { this.clear(); toast(`${ok} inventário(s) sincronizado(s) ✓`,'ok'); }
+    else toast(`${ok} OK, ${err} com erro`,'err');
+    renderPendentes(); renderConfig();
+  }
+};
 
-/* ═══════════════════════════════════════════════════════════════════════
-   INICIALIZAÇÃO
-═══════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════════════ */
+let tagDb=[], tagMap={}, scanning=false, locating=false, filtro={cor:'',tecido:''}, sessaoId='', online=navigator.onLine;
+
+window.addEventListener('online',  ()=>{ online=true;  document.getElementById('offlineBanner').classList.remove('show'); renderPendentes(); });
+window.addEventListener('offline', ()=>{ online=false; document.getElementById('offlineBanner').classList.add('show'); });
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
 (async function init() {
+  if (!online) document.getElementById('offlineBanner').classList.add('show');
   renderConfig();
-  await carregarTagsManual();
-  updateStatusBar();
+  renderPendentes();
+  try {
+    tagDb = await DataSource.fetchTags();
+    document.getElementById('cfgTagCount').textContent = tagDb.length + ' tags';
+    if (CFG.DB_MODE !== 'mock') toast(`${tagDb.length} tags carregadas`,'ok');
+  } catch(e) { toast('Sem acesso ao banco','err'); }
 })();
 
 async function carregarTagsManual() {
   try {
     tagDb = await DataSource.fetchTags();
-    toast(`${tagDb.length} tags carregadas`, 'ok');
-  } catch(e) {
-    toast('Erro ao carregar tags: ' + e.message, 'err');
-  }
+    document.getElementById('cfgTagCount').textContent = tagDb.length + ' tags';
+    toast(`${tagDb.length} tags carregadas ✓`,'ok');
+  } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
-function lookupTag(epc) {
-  return tagDb.find(t => t.epc === epc) || null;
-}
+function lookupTag(epc) { return tagDb.find(t=>t.epc===epc)||null; }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    NAVEGAÇÃO
-═══════════════════════════════════════════════════════════════════════ */
-function goTab(idx) {
-  document.querySelectorAll('.screen').forEach((s,i) => s.classList.toggle('active', i===idx));
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+═══════════════════════════════════════════════ */
+function goTab(i) {
+  document.querySelectorAll('.screen').forEach((s,j)=>s.classList.toggle('active',i===j));
+  document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',i===j));
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    INVENTÁRIO
-═══════════════════════════════════════════════════════════════════════ */
-function toggleScan() {
-  scanning ? pararScan() : iniciarScan();
-}
+═══════════════════════════════════════════════ */
+function toggleScan() { scanning ? pararScan() : iniciarScan(); }
 
 function iniciarScan() {
-  tagMap   = {};
-  scanning = true;
-  sessaoId = 'INV-' + Date.now();
+  tagMap={}; scanning=true; sessaoId='INV-'+Date.now();
   document.getElementById('btnScan').textContent = '⏹ Parar leitura';
-  document.getElementById('btnScan').className = 'btn btn-danger';
-  document.getElementById('btnEnviar').disabled = true;
+  document.getElementById('btnScan').className   = 'btn btn-danger';
+  document.getElementById('btnEnviar').disabled  = true;
   document.getElementById('scanLine').classList.add('active');
+  document.getElementById('cardDesconhecidas').style.display = 'none';
 
   RfidReader.start((epc, rssi) => {
-    const cadastro = lookupTag(epc);
-    const prev     = tagMap[epc];
-    tagMap[epc] = {
-      epc,
-      cor:      cadastro?.cor     || '—',
-      tecido:   cadastro?.tecido  || '—',
-      sala:     cadastro?.sala    || '—',
-      rssi,
-      count: (prev?.count || 0) + 1,
-    };
+    const cad  = lookupTag(epc);
+    const prev = tagMap[epc];
+    tagMap[epc] = { epc, cor: cad?.cor||'', tecido: cad?.tecido||'', sala: cad?.sala||'', rssi, count:(prev?.count||0)+1, cadastrada:!!cad };
     renderTagList();
   });
 }
 
 function pararScan() {
-  RfidReader.stop();
-  scanning = false;
+  RfidReader.stop(); scanning=false;
   document.getElementById('btnScan').textContent = '▶ Iniciar leitura UHF';
-  document.getElementById('btnScan').className = 'btn btn-primary';
+  document.getElementById('btnScan').className   = 'btn btn-primary';
   document.getElementById('scanLine').classList.remove('active');
-  document.getElementById('btnEnviar').disabled = Object.keys(tagMap).length === 0;
+  document.getElementById('btnEnviar').disabled  = Object.keys(tagMap).length===0;
+  renderDesconhecidas();
 }
 
 function renderTagList() {
-  const cor    = document.getElementById('selCor').value;
-  const tecido = document.getElementById('selTecido').value;
-  const tags   = Object.values(tagMap);
-  const filtradas = tags.filter(t =>
-    (!cor    || t.cor.toLowerCase()    === cor.toLowerCase()) &&
-    (!tecido || t.tecido.toLowerCase() === tecido.toLowerCase())
-  );
+  const tags = Object.values(tagMap);
+  const cad  = tags.filter(t=>t.cadastrada);
+  const desc = tags.filter(t=>!t.cadastrada);
+  document.getElementById('cntTotal').textContent         = tags.length;
+  document.getElementById('cntCadastradas').textContent   = cad.length;
+  document.getElementById('cntDesconhecidas').textContent = desc.length;
 
-  document.getElementById('cntTotal').textContent  = tags.length;
-  document.getElementById('cntFiltro').textContent = filtradas.length;
-  document.getElementById('cntNovos').textContent  = tags.filter(t => t.count === 1).length;
-
-  document.getElementById('tagList').innerHTML = tags.slice(-8).reverse().map(t => {
-    const rssiColor = t.rssi >= -55 ? '#22c55e' : t.rssi >= -70 ? '#fbbf24' : '#7a82a0';
-    return `<div class="tag-item">
-      <div>
-        <div class="info">${t.cor} · ${t.tecido}</div>
-        <div class="epc">${t.epc.slice(0,18)}…</div>
-      </div>
-      <div style="text-align:right">
-        <div class="rssi" style="color:${rssiColor}">${t.rssi} dBm</div>
-        <div style="font-size:10px;color:var(--muted)">×${t.count}</div>
-      </div>
+  document.getElementById('tagList').innerHTML = tags.slice(-8).reverse().map(t=>{
+    const c   = t.rssi>=-55?'#22c55e':t.rssi>=-70?'#fbbf24':'#7a82a0';
+    const lbl = t.cadastrada ? `${t.cor} · ${t.tecido}` : '⚠ Não cadastrada';
+    return `<div class="tag-item ${t.cadastrada?'':'unknown'}">
+      <div><div class="info">${lbl}</div><div class="epc">${t.epc.slice(0,20)}…</div></div>
+      <div style="text-align:right"><div class="rssi" style="color:${c}">${t.rssi} dBm</div><div style="font-size:10px;color:var(--muted)">×${t.count}</div></div>
     </div>`;
   }).join('');
+}
+
+function renderDesconhecidas() {
+  const desc = Object.values(tagMap).filter(t=>!t.cadastrada);
+  const card = document.getElementById('cardDesconhecidas');
+  if (!desc.length) { card.style.display='none'; return; }
+  card.style.display='block';
+  document.getElementById('listaDesconhecidas').innerHTML = desc.map(t=>
+    `<div style="font-family:var(--mono);font-size:11px;padding:6px 8px;background:var(--surface);border-radius:6px;color:var(--yellow);margin-bottom:4px;word-break:break-all">${t.epc}</div>`
+  ).join('');
 }
 
 async function enviarInventario() {
   const tags = Object.values(tagMap);
   if (!tags.length) return;
   const btn = document.getElementById('btnEnviar');
-  btn.textContent = 'Enviando…';
-  btn.disabled = true;
-
+  btn.textContent='Enviando…'; btn.disabled=true;
   const sessao = {
     id:          sessaoId,
     sala:        document.getElementById('selSala').value || 'Não informada',
     iniciado_em: Date.now(),
-    leituras: tags.map(t => ({ epc: t.epc, rssi: t.rssi, cor: t.cor, tecido: t.tecido }))
+    leituras:    tags.map(t=>({ epc:t.epc, rssi:t.rssi, cor:t.cor, tecido:t.tecido, cadastrada:t.cadastrada }))
   };
-
+  if (!online) {
+    Q.add(sessao); toast('Salvo offline — sincronize quando tiver internet','ok');
+    btn.textContent='✓ Salvo offline'; renderPendentes(); return;
+  }
   try {
     await DataSource.pushInventario(sessao);
-    toast('Inventário enviado ✓', 'ok');
-    btn.textContent = '✓ Enviado';
+    toast('Inventário enviado ✓','ok'); btn.textContent='✓ Enviado';
   } catch(e) {
-    toast('Erro ao enviar: ' + e.message, 'err');
-    btn.textContent = 'Tentar novamente';
-    btn.disabled = false;
+    Q.add(sessao); toast('Sem rede — salvo offline','err');
+    btn.textContent='✓ Salvo offline'; renderPendentes();
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   LOCALIZAÇÃO — QUENTE/FRIO
-═══════════════════════════════════════════════════════════════════════ */
-function toggleChip(el, tipo, val) {
-  // Para cor: seleção única no grupo
-  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-  const jaAtivo = filtro[tipo] === val;
-  filtro[tipo] = jaAtivo ? '' : val;
-  if (!jaAtivo) el.classList.add('on');
+function renderPendentes() {
+  const n = Q.count();
+  document.getElementById('cardPendentes').classList.toggle('show', n>0);
+  document.getElementById('txtPendentes').textContent = `${n} inventário(s) aguardando envio`;
+  document.getElementById('cfgPendentes').textContent = n;
 }
 
-function toggleLoc() {
-  locating ? pararLoc() : iniciarLoc();
+async function sincronizarPendentes() { await Q.sync(); }
+
+/* ═══════════════════════════════════════════════
+   LOCALIZAÇÃO — modo texto e modo chips
+═══════════════════════════════════════════════ */
+let modoLoc = 'texto';     // 'texto' | 'chips'
+let alvosLoc = new Set();  // EPCs alvo da busca atual
+
+function setModoLoc(modo) {
+  modoLoc = modo;
+  document.getElementById('modoTexto').style.display  = modo==='texto' ? 'block' : 'none';
+  document.getElementById('modoChips').style.display  = modo==='chips' ? 'block' : 'none';
+  document.getElementById('btnModoTexto').style.background = modo==='texto' ? 'var(--accent)' : 'var(--surface)';
+  document.getElementById('btnModoTexto').style.color      = modo==='texto' ? '#fff' : 'var(--muted)';
+  document.getElementById('btnModoTexto').style.border     = modo==='texto' ? 'none' : '1px solid var(--border)';
+  document.getElementById('btnModoChips').style.background = modo==='chips' ? 'var(--accent)' : 'var(--surface)';
+  document.getElementById('btnModoChips').style.color      = modo==='chips' ? '#fff' : 'var(--muted)';
+  document.getElementById('btnModoChips').style.border     = modo==='chips' ? 'none' : '1px solid var(--border)';
+  // limpa seleção ao trocar de modo
+  filtro = { cor:'', tecido:'' };
+  alvosLoc = new Set();
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  document.getElementById('inputBusca').value = '';
+  document.getElementById('resultadosBusca').innerHTML = '';
+  resetProx();
 }
 
-function iniciarLoc() {
-  if (!filtro.cor && !filtro.tecido) {
-    toast('Selecione cor e/ou tecido primeiro', 'err'); return;
-  }
-  document.getElementById('foundCard').classList.remove('show');
-  locating = true;
-  document.getElementById('btnLoc').textContent = '⏹ Parar busca';
-  document.getElementById('btnLoc').className = 'btn btn-danger';
+// ── Modo texto: filtra o banco enquanto digita ──
+function onBuscaInput() {
+  const q = document.getElementById('inputBusca').value.trim().toLowerCase();
+  const box = document.getElementById('resultadosBusca');
+  alvosLoc = new Set();
+  if (!q) { box.innerHTML = ''; return; }
 
-  // Descobre os EPCs alvo no cadastro
-  const alvos = new Set(
-    tagDb
-      .filter(t =>
-        (!filtro.cor    || t.cor.toLowerCase()    === filtro.cor.toLowerCase()) &&
-        (!filtro.tecido || t.tecido.toLowerCase() === filtro.tecido.toLowerCase())
-      )
-      .map(t => t.epc)
+  const matches = tagDb.filter(t =>
+    t.cor.toLowerCase().includes(q)       ||
+    t.tecido.toLowerCase().includes(q)    ||
+    t.descricao.toLowerCase().includes(q) ||
+    t.sala.toLowerCase().includes(q)
   );
 
-  if (alvos.size === 0 && CFG.DB_MODE !== 'mock') {
-    toast('Nenhuma tag encontrada com esse filtro', 'err');
-    pararLoc(); return;
+  if (!matches.length) {
+    box.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px">Nenhum item encontrado</div>';
+    return;
   }
 
-  RfidReader.start((epc, rssi) => {
-    // No mock não temos epc alvo restrito — usa qualquer tag
-    const bate = CFG.DB_MODE === 'mock' ? true : alvos.has(epc);
-    if (!bate) return;
+  // Mostra resultados para o operador confirmar o que vai buscar
+  box.innerHTML = matches.map(t => {
+    const selecionado = alvosLoc.has(t.epc);
+    return `<div onclick="toggleAlvoTexto('${t.epc}', this)"
+      style="padding:8px 10px;border-radius:var(--rsm);border:1px solid var(--border);
+             background:var(--surface);cursor:pointer;display:flex;justify-content:space-between;align-items:center"
+      data-epc="${t.epc}">
+      <div>
+        <div style="font-size:13px;font-weight:600">${t.cor} · ${t.tecido}</div>
+        <div style="font-size:11px;color:var(--muted)">${t.descricao || ''} · ${t.sala}</div>
+      </div>
+      <div class="sel-icon" style="font-size:16px">${selecionado ? '✅' : '○'}</div>
+    </div>`;
+  }).join('');
+}
 
+function toggleAlvoTexto(epc, el) {
+  if (alvosLoc.has(epc)) {
+    alvosLoc.delete(epc);
+    el.style.borderColor = 'var(--border)';
+    el.querySelector('.sel-icon').textContent = '○';
+  } else {
+    alvosLoc.add(epc);
+    el.style.borderColor = 'var(--accent2)';
+    el.querySelector('.sel-icon').textContent = '✅';
+  }
+}
+
+// ── Modo chips ──
+function toggleChip(el, tipo, val) {
+  el.closest('.chips').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  const ja = filtro[tipo]===val;
+  filtro[tipo] = ja?'':val;
+  if (!ja) el.classList.add('on');
+}
+
+function toggleLoc() { locating ? pararLoc() : iniciarLoc(); }
+
+function iniciarLoc() {
+  // Monta o set de EPCs alvo dependendo do modo
+  if (modoLoc === 'texto') {
+    if (!alvosLoc.size) { toast('Selecione ao menos um item da lista','err'); return; }
+    // alvosLoc já está montado pelos cliques na lista
+  } else {
+    if (!filtro.cor && !filtro.tecido) { toast('Selecione cor e/ou tecido primeiro','err'); return; }
+    alvosLoc = new Set(tagDb.filter(t=>
+      (!filtro.cor    || t.cor.toLowerCase()===filtro.cor.toLowerCase()) &&
+      (!filtro.tecido || t.tecido.toLowerCase()===filtro.tecido.toLowerCase())
+    ).map(t=>t.epc));
+    if (!alvosLoc.size) { toast('Nenhuma tag cadastrada com esse filtro','err'); pararLoc(); return; }
+  }
+
+  document.getElementById('foundCard').classList.remove('show');
+  locating=true;
+  document.getElementById('btnLoc').textContent='⏹ Parar busca';
+  document.getElementById('btnLoc').className  ='btn btn-danger';
+
+  RfidReader.start((epc,rssi) => {
+    if (!alvosLoc.has(epc)) return;
     atualizarProx(rssi);
-
     if (rssi >= CFG.RSSI_HOT) {
-      const cadastro = lookupTag(epc);
-      document.getElementById('foundInfo').textContent =
-        `${cadastro?.cor || ''} · ${cadastro?.tecido || ''} · ${cadastro?.sala || ''}`;
-      document.getElementById('foundEpc').textContent = epc;
+      const c = lookupTag(epc);
+      document.getElementById('foundInfo').textContent = `${c?.cor||''} · ${c?.tecido||''} · ${c?.sala||''} · ${c?.descricao||''}`;
+      document.getElementById('foundEpc').textContent  = epc;
       document.getElementById('foundCard').classList.add('show');
       pararLoc();
     }
@@ -787,89 +680,73 @@ function iniciarLoc() {
 }
 
 function pararLoc() {
-  RfidReader.stop();
-  locating = false;
-  document.getElementById('btnLoc').textContent = '🔍 Buscar peça';
-  document.getElementById('btnLoc').className = 'btn btn-primary';
-  if (!document.getElementById('foundCard').classList.contains('show')) {
-    resetProx();
-  }
+  RfidReader.stop(); locating=false;
+  document.getElementById('btnLoc').textContent='🔍 Buscar peça';
+  document.getElementById('btnLoc').className  ='btn btn-primary';
+  if (!document.getElementById('foundCard').classList.contains('show')) resetProx();
 }
 
 function atualizarProx(rssi) {
-  const circ = 2 * Math.PI * 58; // 364.4
-  const pct  = Math.max(0, Math.min(1, (rssi - (-90)) / 40));
-  const dash  = pct * circ;
-
-  let color, emoji, label, hint;
-  if (rssi >= CFG.RSSI_HOT) {
-    color='#22c55e'; emoji='🔥'; label='Muito perto!'; hint='Você está ao lado da peça!';
-  } else if (rssi >= CFG.RSSI_WARM) {
-    color='#fbbf24'; emoji='🌡️'; label='Perto';        hint='Está ficando mais quente…';
-  } else if (rssi >= CFG.RSSI_COLD) {
-    color='#60a5fa'; emoji='❄️'; label='Longe';         hint='Continue caminhando…';
-  } else {
-    color='#7a82a0'; emoji='🧊'; label='Muito longe';   hint='Afaste-se e tente outra direção';
-  }
-
-  document.getElementById('proxArc').setAttribute('stroke-dasharray', `${dash} ${circ}`);
-  document.getElementById('proxArc').style.stroke = color;
-  document.getElementById('proxEmoji').textContent = emoji;
-  document.getElementById('proxDbm').textContent   = rssi + ' dBm';
-  document.getElementById('proxLabel').textContent = label;
-  document.getElementById('proxLabel').style.color = color;
-  document.getElementById('proxHint').textContent  = hint;
+  const circ=2*Math.PI*58, pct=Math.max(0,Math.min(1,(rssi-(-90))/40)), dash=pct*circ;
+  let color,emoji,label,hint;
+  if      (rssi>=CFG.RSSI_HOT)  {color='#22c55e';emoji='🔥';label='Muito perto!'; hint='Você está ao lado da peça!';}
+  else if (rssi>=CFG.RSSI_WARM) {color='#fbbf24';emoji='🌡️';label='Perto';        hint='Está ficando mais quente…';}
+  else if (rssi>=CFG.RSSI_COLD) {color='#60a5fa';emoji='❄️';label='Longe';         hint='Continue caminhando…';}
+  else                           {color='#7a82a0';emoji='🧊';label='Muito longe';  hint='Afaste-se e tente outra direção';}
+  document.getElementById('proxArc').setAttribute('stroke-dasharray',`${dash} ${circ}`);
+  document.getElementById('proxArc').style.stroke    =color;
+  document.getElementById('proxEmoji').textContent   =emoji;
+  document.getElementById('proxDbm').textContent     =rssi+' dBm';
+  document.getElementById('proxLabel').textContent   =label;
+  document.getElementById('proxLabel').style.color   =color;
+  document.getElementById('proxHint').textContent    =hint;
 }
 
 function resetProx() {
-  document.getElementById('proxArc').setAttribute('stroke-dasharray', '0 365');
-  document.getElementById('proxArc').style.stroke = '#3b82f6';
-  document.getElementById('proxEmoji').textContent = '—';
-  document.getElementById('proxDbm').textContent   = '';
-  document.getElementById('proxLabel').textContent = 'Aguardando';
-  document.getElementById('proxLabel').style.color = 'var(--muted)';
-  document.getElementById('proxHint').textContent  = 'Selecione cor e/ou tecido e pressione o gatilho do C72';
+  document.getElementById('proxArc').setAttribute('stroke-dasharray','0 365');
+  document.getElementById('proxArc').style.stroke   ='#3b82f6';
+  document.getElementById('proxEmoji').textContent  ='—';
+  document.getElementById('proxDbm').textContent    ='';
+  document.getElementById('proxLabel').textContent  ='Aguardando';
+  document.getElementById('proxLabel').style.color  ='var(--muted)';
+  document.getElementById('proxHint').textContent   ='Selecione cor e/ou tecido e pressione o gatilho do C72';
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   CONFIG — renderiza painel
-═══════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════ */
 function renderConfig() {
-  document.getElementById('cfgDbMode').textContent = CFG.DB_MODE.toUpperCase();
-  document.getElementById('cfgDbMode').className   = 'cfg-pill ' + (CFG.DB_MODE === 'mock' ? 'pill-off' : 'pill-on');
-  document.getElementById('cfgUrl').textContent    = CFG.DB_MODE === 'supabase' ? CFG.SUPABASE_URL :
-                                                      CFG.DB_MODE === 'api'      ? CFG.API_BASE_URL : '—';
-  document.getElementById('cfgTable').textContent  = CFG.DB_MODE === 'supabase' ? CFG.SUPABASE_TABLE :
-                                                      CFG.DB_MODE === 'api'      ? CFG.API_TAGS_ENDPOINT : '—';
-  document.getElementById('cfgRfidMode').textContent = CFG.RFID_MODE === 'real' ? 'C72 REAL' : 'SIMULADO';
-  document.getElementById('cfgRfidMode').className   = 'cfg-pill ' + (CFG.RFID_MODE === 'real' ? 'pill-on' : 'pill-off');
-  document.getElementById('cfgPower').textContent  = CFG.UHF_POWER + ' dBm';
-  document.getElementById('cfgHot').textContent    = CFG.RSSI_HOT + ' dBm';
-  document.getElementById('cfgWarm').textContent   = CFG.RSSI_WARM + ' dBm';
-  document.getElementById('cfgCold').textContent   = CFG.RSSI_COLD + ' dBm';
-}
-
-function updateStatusBar() {
-  document.getElementById('sbModeVal').textContent = CFG.RFID_MODE === 'real' ? 'Real' : 'Mock';
-  document.getElementById('sbDbVal').textContent   = CFG.DB_MODE;
+  const dbOk = CFG.DB_MODE!=='mock';
+  document.getElementById('cfgDbMode').textContent   = CFG.DB_MODE.toUpperCase();
+  document.getElementById('cfgDbMode').className     = 'cfg-pill '+(dbOk?'pill-on':'pill-off');
+  document.getElementById('cfgUrl').textContent      = CFG.DB_MODE==='supabase'?CFG.SUPABASE_URL:CFG.DB_MODE==='api'?CFG.API_BASE_URL:'—';
+  document.getElementById('cfgTable').textContent    = CFG.DB_MODE==='supabase'?CFG.SUPABASE_TABLE:CFG.DB_MODE==='api'?CFG.API_TAGS_ENDPOINT:'—';
+  document.getElementById('cfgRfidMode').textContent = CFG.RFID_MODE==='real'?'C72 REAL':'SIMULADO (mock)';
+  document.getElementById('cfgRfidMode').className   = 'cfg-pill '+(CFG.RFID_MODE==='real'?'pill-on':'pill-warn');
+  document.getElementById('cfgPower').textContent    = CFG.UHF_POWER+' dBm';
+  document.getElementById('cfgHot').textContent      = CFG.RSSI_HOT+' dBm';
+  document.getElementById('cfgWarm').textContent     = CFG.RSSI_WARM+' dBm';
+  document.getElementById('cfgCold').textContent     = CFG.RSSI_COLD+' dBm';
+  document.getElementById('sbRfid').textContent      = CFG.RFID_MODE==='real'?'Real':'Mock';
+  document.getElementById('sbDb').textContent        = CFG.DB_MODE;
+  document.getElementById('cfgPendentes').textContent= Q.count();
 }
 
 async function testarConexao() {
-  toast('Testando…', '');
+  toast('Testando…','');
   const r = await DataSource.testar();
-  toast(r.msg, r.ok ? 'ok' : 'err');
+  toast(r.msg, r.ok?'ok':'err');
+  if (r.ok) { tagDb=await DataSource.fetchTags(); document.getElementById('cfgTagCount').textContent=tagDb.length+' tags'; }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    TOAST
-═══════════════════════════════════════════════════════════════════════ */
-let toastTimer;
-function toast(msg, tipo) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className   = 'show ' + (tipo || '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+═══════════════════════════════════════════════ */
+let _tt;
+function toast(msg,tipo) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='show '+(tipo||'');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),3000);
 }
 </script>
 </body>
