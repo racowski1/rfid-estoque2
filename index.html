@@ -426,7 +426,7 @@ const CFG = {
   FIELD_DESC:     'descricao',
 
   // ── Leitor RFID ───────────────────────────────────────────────────────
-  RFID_MODE:  'mock',   // 'real' = SDK Chainway via Android bridge
+  RFID_MODE:  'real',   // 'real' = SDK Chainway via Android bridge
                          // 'mock' = simula leituras (teste no PC/emulador)
   UHF_POWER:  27,        // dBm
 
@@ -460,12 +460,12 @@ const DataSource = {
 
   // Testa conectividade
   async testar() {
-    if (CFG.DB_MODE === 'mock') return { ok: true, msg: 'Modo mock — sem banco real' };
+    if (CFG.DB_MODE === 'mock') return { ok: false, msg: 'Modo mock — banco NÃO conectado' };
     try {
-      await DataSource.fetchTags();
-      return { ok: true, msg: 'Conexão OK ✓' };
+      const tags = await DataSource.fetchTags();
+      return { ok: true, msg: `Supabase OK ✓ — ${tags.length} tag(s) no cadastro` };
     } catch(e) {
-      return { ok: false, msg: e.message };
+      return { ok: false, msg: 'Erro: ' + e.message };
     }
   },
 
